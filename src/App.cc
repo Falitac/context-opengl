@@ -7,6 +7,7 @@ camera(glm::vec3(0.f, 0.f, -7.f)),
 cubeScaleFactor(1.0f),
 animation(false)
 {
+  cube = std::make_shared<Cube>();
 }
 
 
@@ -30,72 +31,9 @@ void App::run() {
   glEnable(GL_CULL_FACE);
   glClearColor(0.3f, 0.5f, 0.3f, 1.0f);
 
-  vertices = genCube();
-  indices = {
-    7, 3, 1,
-    7, 1, 5,
-
-    3, 2, 0,
-    3, 0, 1,
-
-    2, 6, 4,
-    2, 4, 0,
-
-    6, 7, 5,
-    6, 5, 4, 
-
-    7, 6, 2,
-    0, 5, 1,
-
-    3, 7, 2,
-    0, 4, 5,
-  };
-
-  std::uniform_real_distribution<float> dist;
-
-  for(int i=0; auto& vertex: vertices) {
-    colors.emplace_back(dist(rand));
-
-    if(i%3 == 2) {
-      std::cout << "\n";
-    } else {
-      std::cout << " ";
-    }
-    i++;
-  }
-
-  glGenBuffers(1, &verticesBuffer);
-  glGenBuffers(1, &colorBuffer);
-  glGenBuffers(1, &indicesBuffer);
-
-  glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
-  glBufferData(
-    GL_ARRAY_BUFFER,
-    vertices.size()*sizeof(float),
-    vertices.data(),
-    GL_STATIC_DRAW
-  );
-  glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-  glBufferData(
-    GL_ARRAY_BUFFER,
-    colors.size()*sizeof(float),
-    colors.data(),
-    GL_STATIC_DRAW
-  );
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer);
-  glBufferData(
-    GL_ELEMENT_ARRAY_BUFFER,
-    indices.size()*sizeof(GLuint),
-    indices.data(),
-    GL_STATIC_DRAW
-  );
-
   shaderID = LoadShaders("assets/shaders/vertex.glsl", "assets/shaders/fragment.glsl");
 
-  mvpID = glGetUniformLocation(shaderID, "MVP");
-  //viewID = glGetUniformLocation(shaderID, "view");
-  //modelID = glGetUniformLocation(shaderID, "model");
-
+  cube->load();
 
   mainLoop();
 }
@@ -193,46 +131,7 @@ void App::draw() {
     );
   projectionView = projectionMatrix * viewMatrix;
 
-  glUseProgram(shaderID);
-
-  glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-  glEnableVertexAttribArray(1);
-  glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer);
-
-
-  auto radius = 12;
-  for(int y = -radius; y <= radius; y++) {
-    float dAlfa = glm::abs(radius - y) + 1 / (glm::two_pi<float>() * radius);
-    dAlfa = 0.1;
-    for(float alfa = 0; alfa < glm::two_pi<float>(); alfa += dAlfa) {
-      auto innerScale = 3;
-      auto cubePos = glm::vec3();
-      cubePos.y = y * innerScale;
-
-      auto distance = glm::sqrt(radius*radius - y*y);
-      distance *= innerScale;
-      cubePos.x = distance * glm::sin(alfa);
-      cubePos.z = distance * glm::cos(alfa);
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, cubePos);
-      model = glm::scale(model, glm::vec3(cubeScaleFactor));
-      model = glm::rotate(
-                        model,
-                        startClock.getElapsedTime().asSeconds(),
-                        glm::vec3(0.2f, 1.0f, 0.5f)
-                      );
-      model = projectionView * model;
-      glUniformMatrix4fv(mvpID, 1, GL_FALSE, &model[0][0]);
-      glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
-    }
-  }
-
+  cube->draw(projectionView, shaderID);
 
   window.pushGLStates();
   window.popGLStates();

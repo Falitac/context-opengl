@@ -1,14 +1,19 @@
 #pragma once
-#include <iostream>
+
+#include "Camera.hpp"
+#include "Generators.hpp"
+#include "LoadShader.hpp"
+#include "Random.hpp"
+#include "Cube.hpp"
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <SFML/Graphics.hpp>
 #include <random>
-#include "Camera.hpp"
-#include "Generators.hpp"
-#include "LoadShader.hpp"
+#include <memory>
+#include <iostream>
+
 
 class App
 {
@@ -42,6 +47,8 @@ private:
     GLuint verticesBuffer;
     GLuint colorBuffer;
     GLuint indicesBuffer;
+
+    std::shared_ptr<Object> cube;
 
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> colors;
