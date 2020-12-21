@@ -3,11 +3,10 @@
 #include "Object.hpp"
 #include "Random.hpp"
 
-class Cube : public Object {
+class RandomObject: public Object {
 public:
   virtual void load();
 
-  Cube() {
-  }
+  RandomObject() = default;
 
 };

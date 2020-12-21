@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Camera.hpp"
-#include "Generators.hpp"
 #include "LoadShader.hpp"
 #include "Random.hpp"
 #include "Cube.hpp"
+#include "RandomObject.hpp"
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -35,39 +35,24 @@ private:
     sf::RenderWindow window;
     sf::ContextSettings contextSettings;
     std::map<int, bool> keyMap;
-
-    std::random_device rand;
     
+    // all about animation
     bool animation;
     sf::Clock animationClock;
     float cubeScaleFactor;
     
-    GLuint VAO;
-    GLuint VBO;
-    GLuint verticesBuffer;
-    GLuint colorBuffer;
-    GLuint indicesBuffer;
-
-    std::shared_ptr<Object> cube;
-
-    std::vector<GLfloat> vertices;
-    std::vector<GLfloat> colors;
-    std::vector<GLuint> indices;
+    std::vector<std::unique_ptr<Object>> objects;
 
     GLuint shaderID;
     
+    // MVP matrix
     glm::mat4 projectionMatrix;
     glm::mat4 viewMatrix;
     glm::mat4 projectionView;
 
-    GLuint mvpID;
-    GLuint viewID;
-    GLuint modelID;
-
     Camera camera;
 
     sf::Clock startClock;
-
 
     // Performance data
     sf::Clock fpsClock;

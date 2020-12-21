@@ -9,11 +9,20 @@
 class Object {
 public:
   virtual void load() = 0;
-  virtual void draw(glm::mat4 projectionView, GLuint shaderID) = 0;
+  virtual void draw(GLuint shaderID);
 
-  Object() = default;
+  Object():
+  model(1.f) {
+    glGenBuffers(1, &vertexBuffer);
+    glGenBuffers(1, &colorBuffer);
+    glGenBuffers(1, &indicesBuffer);
+  }
 
-  ~Object() = default;
+  ~Object() {
+    glDeleteBuffers(1, &vertexBuffer);
+    glDeleteBuffers(1, &colorBuffer);
+    glDeleteBuffers(1, &indicesBuffer);
+  }
 
 protected:
   GLuint vertexBuffer;
@@ -23,5 +32,9 @@ protected:
   std::vector<glm::vec3> vertices;
   std::vector<glm::vec3> colors;
   std::vector<std::uint32_t> indices;
+
+  glm::mat4 model;
+
+  void applyData();
 };
 

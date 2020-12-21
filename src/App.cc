@@ -7,7 +7,6 @@ camera(glm::vec3(0.f, 0.f, -7.f)),
 cubeScaleFactor(1.0f),
 animation(false)
 {
-  cube = std::make_shared<Cube>();
 }
 
 
@@ -33,7 +32,12 @@ void App::run() {
 
   shaderID = LoadShaders("assets/shaders/vertex.glsl", "assets/shaders/fragment.glsl");
 
-  cube->load();
+  int objectCount = 20000;
+  for(int i = 0; i < objectCount; i++) {
+    auto object = std::make_unique<Cube>();
+    object->load();
+    objects.push_back(std::move(object));
+  }
 
   mainLoop();
 }
@@ -131,7 +135,15 @@ void App::draw() {
     );
   projectionView = projectionMatrix * viewMatrix;
 
-  cube->draw(projectionView, shaderID);
+  glUseProgram(shaderID);
+  GLint viewID = glGetUniformLocation(shaderID, "view");
+  GLint projectionID = glGetUniformLocation(shaderID, "projection");
+  glUniformMatrix4fv(viewID, 1, GL_FALSE, &viewMatrix[0][0]);
+  glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projectionMatrix[0][0]);
+
+  for(auto& object : objects) {
+    object->draw(shaderID);
+  }
 
   window.pushGLStates();
   window.popGLStates();
@@ -160,8 +172,8 @@ void App::mainLoop() {
   handleResize();
 
   while(window.isOpen()) {
-    sf::Time timeDiffrence = timer.getElapsedTime() - lastFrameTime;
-    timeAccumulator += timeDiffrence;
+    sf::Time timeDifference = timer.getElapsedTime() - lastFrameTime;
+    timeAccumulator += timeDifference;
     lastFrameTime = timer.getElapsedTime();
 
     handleEvents();
