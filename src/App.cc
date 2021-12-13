@@ -1,11 +1,9 @@
 #include "../include/App.hpp"
 
-App::App():
-contextSettings(24, 8, 4, 4, 6),
-titlePrefix("OpenGL "),
-camera(glm::vec3(0.f, 0.f, -7.f)),
-cubeScaleFactor(1.0f),
-animation(false)
+App::App()
+  : contextSettings(24, 8, 4, 4, 6)
+  , titlePrefix("OpenGL ")
+  , camera(glm::vec3(0.f, 0.f, -7.f))
 {
 }
 
@@ -31,15 +29,26 @@ void App::run() {
   glClearColor(0.3f, 0.5f, 0.3f, 1.0f);
 
   shaderID = LoadShaders("assets/shaders/vertex.glsl", "assets/shaders/fragment.glsl");
+  vertices = {
+    -1.0f, -1.0f, 0.0f,
+    +1.0f, +1.0f, 0.0f,
+    -1.0f, +1.0f, 0.0f,
 
-  int objectCount = 20000;
-  for(int i = 0; i < objectCount; i++) {
-    auto object = std::make_unique<Cube>();
-    object->load();
-    objects.push_back(std::move(object));
-  }
+    -1.0f, -1.0f, 0.0f,
+    +1.0f, -1.0f, 0.0f,
+    +1.0f, +1.0f, 0.0f,
+  };
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  std::cout << vertices.size() * sizeof(float) << "\n";
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3* sizeof(float), nullptr);
+  glEnableVertexAttribArray(0);
 
   mainLoop();
+  glDeleteProgram(shaderID);
 }
 
 void App::handleEvents() {
@@ -85,10 +94,6 @@ void App::logic(const float& deltaTime) {
   if(keyMap[sf::Keyboard::D]) {
     strafeSpeed += maxSpeed;
   }
-  if(keyMap[sf::Keyboard::X]) {
-    animation = true;
-    animationClock.restart();
-  }
 
   if(keyMap[sf::Keyboard::Space]) {
     auto deltaMouse = sf::Vector2i(window.getSize()) / 2 - sf::Mouse::getPosition(window);
@@ -98,26 +103,16 @@ void App::logic(const float& deltaTime) {
     rotateVert = deltaMouse.y * sensitivity * deltaTime;
   }
 
-  if(animation) {
-    auto t1 = sf::seconds(0.5f);
-    auto t2 = sf::seconds(1.2f);
-    auto animationFuncAsc = [&](const float& time) {
-      auto mapped = time / t1.asSeconds();
-      return 2.0f - glm::pow((mapped - 1.f), 2);
-    };
-    auto animationFuncDesc = [&](const float& time) {
-      auto mapped =  (time - t1.asSeconds()) / (t2 - t1).asSeconds();
-      return 1.0f + glm::pow((mapped - 1.f), 2);
-    };
-    auto animationTime = animationClock.getElapsedTime();
-    if(animationTime <= t1) {
-      cubeScaleFactor = animationFuncAsc(animationTime.asSeconds());
-    } else if (animationTime <= t2) {
-      cubeScaleFactor = animationFuncDesc(animationTime.asSeconds());
-    } else {
-      animation = false;
+  if(keyMap[sf::Keyboard::X]) {
+    if(!shaderReloaded) {
+      glDeleteProgram(shaderID);
+      shaderID = LoadShaders("assets/shaders/vertex.glsl", "assets/shaders/fragment.glsl");
+      shaderReloaded = true;
     }
+  } else {
+    shaderReloaded = false;
   }
+
   camSpeed *= deltaTime;
   strafeSpeed *= deltaTime;
   camera.horAngle() += glm::radians(rotateHor);
@@ -136,16 +131,20 @@ void App::draw() {
   projectionView = projectionMatrix * viewMatrix;
 
   glUseProgram(shaderID);
+  glBindVertexArray(vao);
+  /*
   GLint viewID = glGetUniformLocation(shaderID, "view");
   GLint projectionID = glGetUniformLocation(shaderID, "projection");
   glUniformMatrix4fv(viewID, 1, GL_FALSE, &viewMatrix[0][0]);
   glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projectionMatrix[0][0]);
+  */
+  GLint timeUniform = glGetUniformLocation(shaderID, "time");
+  glUniform1f(timeUniform, startClock.getElapsedTime().asSeconds());
+  glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 
-  for(auto& object : objects) {
-    object->draw(shaderID);
-  }
-
+  glBindVertexArray(0);
   window.pushGLStates();
+
   window.popGLStates();
   window.display();
 }

@@ -3,8 +3,6 @@
 #include "Camera.hpp"
 #include "LoadShader.hpp"
 #include "Random.hpp"
-#include "Cube.hpp"
-#include "RandomObject.hpp"
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -13,6 +11,7 @@
 #include <random>
 #include <memory>
 #include <iostream>
+#include <vector>
 
 
 class App
@@ -35,15 +34,9 @@ private:
     sf::RenderWindow window;
     sf::ContextSettings contextSettings;
     std::map<int, bool> keyMap;
-    
-    // all about animation
-    bool animation;
-    sf::Clock animationClock;
-    float cubeScaleFactor;
-    
-    std::vector<std::unique_ptr<Object>> objects;
 
     GLuint shaderID;
+    bool shaderReloaded = false;
     
     // MVP matrix
     glm::mat4 projectionMatrix;
@@ -64,6 +57,10 @@ private:
     inline T getAspectRatio() {
       return static_cast<T>(window.getSize().x) / window.getSize().y;
     }
+
+    std::vector<float> vertices;
+    uint32_t vbo;
+    uint32_t vao;
 
     void showDebugInfo();
 };
