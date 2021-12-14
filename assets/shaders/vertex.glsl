@@ -9,9 +9,11 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+uniform float time;
 
 void main() {
   mat4 MVP = projection * view * model;
-  gl_Position = MVP * vec4(position, 1.0);
-  fragmentColor = vertexColor;
+  float radius = 0.2;
+  gl_Position = vec4(position, 1.0);
+  fragmentColor = vec3(0.0, 0.5, 0.5);
 }

@@ -26,9 +26,11 @@ void App::run() {
   glEnable(GL_DEPTH_BUFFER);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
-  glClearColor(0.3f, 0.5f, 0.3f, 1.0f);
+  glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
   shaderID = LoadShaders("assets/shaders/vertex.glsl", "assets/shaders/fragment.glsl");
+  getShaderUniforms(shaderID);
+
   vertices = {
     -1.0f, -1.0f, 0.0f,
     +1.0f, +1.0f, 0.0f,
@@ -68,6 +70,22 @@ void App::handleEvents() {
       break;
       case sf::Event::Resized:
         handleResize();
+      break;
+      case sf::Event::MouseWheelScrolled: {
+        auto delta = event.mouseWheelScroll.delta;
+        zoom *= 1.0 + delta / 20.f;
+
+        auto mousePos = sf::Vector2f(sf::Mouse::getPosition(window));
+        mousePos.x /= float(window.getSize().x) / 2.0f;
+        mousePos.y /= float(window.getSize().y) / 2.0f;
+        auto pos = mousePos - sf::Vector2f(1.0f, 1.0f);
+        pos.y = -pos.y;
+        pos.y /= getAspectRatio();
+
+        centerPoint += glm::vec2(pos.x, pos.y) * zoom;
+        printf("%f %f\n", centerPoint.x, centerPoint.y);
+      }
+      break;
       default:
       break;
     }
@@ -103,14 +121,42 @@ void App::logic(const float& deltaTime) {
     rotateVert = deltaMouse.y * sensitivity * deltaTime;
   }
 
+  static glm::vec2 mouseLastPos;
+  if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+  }
+
   if(keyMap[sf::Keyboard::X]) {
     if(!shaderReloaded) {
       glDeleteProgram(shaderID);
       shaderID = LoadShaders("assets/shaders/vertex.glsl", "assets/shaders/fragment.glsl");
+      getShaderUniforms(shaderID);
+
       shaderReloaded = true;
     }
   } else {
     shaderReloaded = false;
+  }
+
+  if(keyMap[sf::Keyboard::T]) {
+    zoomOutAnimation = true;
+  }
+
+  if(zoomOutAnimation) {
+    auto zoomMultiplier = 1.0f + 0.1f * deltaTime;
+    if(zoom < 1.0f) {
+     zoom *= zoomMultiplier; 
+     if(zoom >= 1.0f) {
+       zoomOutAnimation = false;
+       zoom = 1.0f;
+     }
+    }
+    if(zoom > 1.0f) {
+     zoom /= zoomMultiplier; 
+     if(zoom <= 1.0f) {
+       zoom = 1.0f;
+       zoomOutAnimation = false;
+     }
+    }
   }
 
   camSpeed *= deltaTime;
@@ -132,14 +178,14 @@ void App::draw() {
 
   glUseProgram(shaderID);
   glBindVertexArray(vao);
-  /*
-  GLint viewID = glGetUniformLocation(shaderID, "view");
-  GLint projectionID = glGetUniformLocation(shaderID, "projection");
+
   glUniformMatrix4fv(viewID, 1, GL_FALSE, &viewMatrix[0][0]);
   glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projectionMatrix[0][0]);
-  */
-  GLint timeUniform = glGetUniformLocation(shaderID, "time");
   glUniform1f(timeUniform, startClock.getElapsedTime().asSeconds());
+  glUniform1f(zoomUniform, zoom);
+  glUniform2f(centerUniform, centerPoint.x, centerPoint.y);
+  glUniform2f(resolutionUniform, window.getSize().x, window.getSize().y);
+
   glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 
   glBindVertexArray(0);
@@ -209,3 +255,12 @@ void App::showDebugInfo() {
   }
 }
 
+
+void App::getShaderUniforms(GLuint shaderID) {
+  viewID       = glGetUniformLocation(shaderID, "view");
+  projectionID = glGetUniformLocation(shaderID, "projection");
+  timeUniform  = glGetUniformLocation(shaderID, "time");
+  zoomUniform  = glGetUniformLocation(shaderID, "zoom");
+  centerUniform  = glGetUniformLocation(shaderID, "centerPoint");
+  resolutionUniform  = glGetUniformLocation(shaderID, "resolution");
+}

@@ -37,6 +37,16 @@ private:
 
     GLuint shaderID;
     bool shaderReloaded = false;
+    GLint resolutionUniform;
+    GLint viewID;
+    GLint projectionID;
+    GLint timeUniform;
+    GLint zoomUniform;
+    GLint centerUniform;
+
+    float zoom = 1.0f;
+    glm::vec2 centerPoint;
+    bool zoomOutAnimation = false;
     
     // MVP matrix
     glm::mat4 projectionMatrix;
@@ -63,4 +73,6 @@ private:
     uint32_t vao;
 
     void showDebugInfo();
+
+    void getShaderUniforms(GLuint);
 };
