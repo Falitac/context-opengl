@@ -5,7 +5,7 @@ project(context_opengl VERSION 1.0)
 file(GLOB_RECURSE sources "src/*.cc")
 add_executable(context_opengl ${sources})
 
-file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+#file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 #file(COPY binaries/*.dll DESTINATION ${CMAKE_BINARY_DIR})
 
 

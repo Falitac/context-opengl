@@ -75,15 +75,11 @@ void App::handleEvents() {
         auto delta = event.mouseWheelScroll.delta;
         zoom *= 1.0 + delta / 20.f;
 
-        auto mousePos = sf::Vector2f(sf::Mouse::getPosition(window));
-        mousePos.x /= float(window.getSize().x) / 2.0f;
-        mousePos.y /= float(window.getSize().y) / 2.0f;
-        auto pos = mousePos - sf::Vector2f(1.0f, 1.0f);
-        pos.y = -pos.y;
-        pos.y /= getAspectRatio();
-
-        centerPoint += glm::vec2(pos.x, pos.y) * zoom;
-        printf("%f %f\n", centerPoint.x, centerPoint.y);
+      }
+      break;
+      case sf::Event::MouseButtonPressed: {
+        if(sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        }
       }
       break;
       default:
@@ -141,8 +137,25 @@ void App::logic(const float& deltaTime) {
     zoomOutAnimation = true;
   }
 
+  if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+
+    auto mousePos = sf::Vector2f(sf::Mouse::getPosition(window));
+    mousePos.x /= float(window.getSize().x) / 2.0f;
+    mousePos.y /= float(window.getSize().y) / 2.0f;
+    auto pos = mousePos - sf::Vector2f(1.0f, 1.0f);
+    pos.y /= getAspectRatio();
+    if(!mouseDrag) {
+      pickedPoint = (centerPoint + glm::vec2(pos.x, -pos.y)*zoom);
+    }
+    mouseDrag = true;
+    centerPoint = (pickedPoint - glm::vec2(pos.x, -pos.y)*zoom);
+    printf("%f %f\n", centerPoint.x, centerPoint.y);
+  } else {
+    mouseDrag = false;
+  }
+
   if(zoomOutAnimation) {
-    auto zoomMultiplier = 1.0f + 0.1f * deltaTime;
+    auto zoomMultiplier = 1.0f + 0.1f;
     if(zoom < 1.0f) {
      zoom *= zoomMultiplier; 
      if(zoom >= 1.0f) {

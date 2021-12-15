@@ -47,6 +47,9 @@ private:
     float zoom = 1.0f;
     glm::vec2 centerPoint;
     bool zoomOutAnimation = false;
+
+    bool mouseDrag = false;
+    glm::vec2 pickedPoint;
     
     // MVP matrix
     glm::mat4 projectionMatrix;
